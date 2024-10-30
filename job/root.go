@@ -2,7 +2,9 @@ package job
 
 import (
 	"context"
+	"github.com/04Akaps/trading_bot.git/client/cryptoCurrency"
 	"github.com/04Akaps/trading_bot.git/client/slack"
+	_cryptoCurrency "github.com/04Akaps/trading_bot.git/types/cryptoCurrency"
 	"github.com/robfig/cron"
 )
 
@@ -10,14 +12,17 @@ type Job struct {
 	c *cron.Cron
 
 	slackClient slack.SlackClient
+	exchanger   cryptoCurrency.CryptoCurrency
 }
 
 func NewJob(
 	slackClient slack.SlackClient,
+	exchanger cryptoCurrency.CryptoCurrency,
 ) *Job {
 	j := &Job{
 		c:           cron.New(),
 		slackClient: slackClient,
+		exchanger:   exchanger,
 	}
 
 	return j
@@ -26,8 +31,10 @@ func NewJob(
 func (j *Job) Run(ctx context.Context) error {
 
 	j.c.AddFunc("0 * * * *", func() {
-		j.slackClient.HealthCheck("Health check")
+		j.slackClient.HealthCheck()
 	})
+
+	j.exchanger.GetTokenPrice(_cryptoCurrency.Binance, "BTC")
 
 	//j.c.AddFunc("0 0/2 * 1/1 * ? *", func() {
 	//	j.alertSignificantPriceChange(context.WithCancel(ctx))

@@ -27,3 +27,7 @@ func NewCryptoCurrency(cfg map[string]config.CryptoCurrency) CryptoCurrency {
 
 	return c
 }
+
+func (c CryptoCurrency) GetTokenPrice(cex cryptoCurrency.Exchanger, symbol string) string {
+	return c.exchanger[cex].GetPrice(symbol)
+}

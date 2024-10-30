@@ -38,12 +38,12 @@ func (c SlackClient) TestMessage(format string) {
 	}
 }
 
-func (c SlackClient) HealthCheck(format string) {
+func (c SlackClient) HealthCheck() {
 
 	_, _, err := c.client.PostMessageContext(
 		context.Background(),
 		c.id,
-		slack.MsgOptionAttachments(defaultAttachment(format)),
+		slack.MsgOptionAttachments(defaultAttachment("Healch Check")),
 	)
 
 	if err != nil {

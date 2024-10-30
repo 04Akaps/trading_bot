@@ -38,7 +38,11 @@ var CryptoClient = fx.Module(
 
 var Job = fx.Module(
 	"job",
-	fx.Provide(func(cfg config.Config, slack slack.SlackClient) *job.Job {
-		return job.NewJob(slack)
+	fx.Provide(func(
+		cfg config.Config,
+		slack slack.SlackClient,
+		exchanger cryptoCurrency.CryptoCurrency,
+	) *job.Job {
+		return job.NewJob(slack, exchanger)
 	}),
 )
