@@ -1,0 +1,18 @@
+
+[slack]
+token = "xoxb-7417263271732-7957682213092-Gy70XhpkYuCUfiH2eDgJqrb9"
+channelID = "C07U35JUM1Q"
+
+
+
+
+#
+#type Config struct {
+#Slack          Slack
+#CryptoCurrency []CryptoCurrency
+#}
+
+#https://api.binance.com
+#yExqHR3bzWSQK2vVg48qxFVnEPzTuRHhhZkYjMSMjRPIqivcFkksW4c9PS1Uoamk
+
+#GsXbZWfGiZrVpIZLtHDbgTt3Pdpr3q0jfoP0REXLYR7PAAc490ylROlISuhJytyS

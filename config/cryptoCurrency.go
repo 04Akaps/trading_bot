@@ -6,6 +6,7 @@ import (
 )
 
 type CryptoCurrency struct {
+	BaseUrl   string
 	APIKey    string
 	SecretKey string
 	Exchange  cryptoCurrency.Exchanger
