@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"github.com/04Akaps/trading_bot.git/common/json"
+	"github.com/04Akaps/trading_bot.git/types"
 	"github.com/go-resty/resty/v2"
 	"time"
 )
@@ -71,4 +72,10 @@ func (u client) GET(url string, paramName, req []string, resp interface{}) error
 	}
 
 	return nil
+}
+
+func (u client) GetCurrentPriceTicker(url, headerKey, apiKey string, buffer []*types.CurrentPriceTicker) error {
+	_, err := HttpClient.R().SetHeader(headerKey, apiKey).SetResult(buffer).Get(url)
+
+	return err
 }

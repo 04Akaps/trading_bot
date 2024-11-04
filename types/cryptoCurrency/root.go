@@ -9,3 +9,7 @@ const (
 var SupportedExchanger = map[Exchanger]bool{
 	Binance: true,
 }
+
+func (e Exchanger) ToString() string {
+	return string(e)
+}

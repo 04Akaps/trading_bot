@@ -4,12 +4,14 @@ import (
 	"context"
 	"github.com/04Akaps/trading_bot.git/client/cryptoCurrency"
 	"github.com/04Akaps/trading_bot.git/client/slack"
+	"github.com/04Akaps/trading_bot.git/config"
 	_cryptoCurrency "github.com/04Akaps/trading_bot.git/types/cryptoCurrency"
 	"github.com/robfig/cron"
 )
 
 type Job struct {
-	c *cron.Cron
+	c   *cron.Cron
+	cfg config.Config
 
 	slackClient slack.SlackClient
 	exchanger   cryptoCurrency.CryptoCurrency
@@ -18,9 +20,11 @@ type Job struct {
 func NewJob(
 	slackClient slack.SlackClient,
 	exchanger cryptoCurrency.CryptoCurrency,
+	cfg config.Config,
 ) *Job {
 	j := &Job{
 		c:           cron.New(),
+		cfg:         cfg,
 		slackClient: slackClient,
 		exchanger:   exchanger,
 	}

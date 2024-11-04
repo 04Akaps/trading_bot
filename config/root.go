@@ -1,13 +1,14 @@
 package config
 
 import (
+	"github.com/04Akaps/trading_bot.git/types/cryptoCurrency"
 	"github.com/naoina/toml"
 	"os"
 )
 
 type Config struct {
 	Slack          Slack
-	CryptoCurrency map[string]CryptoCurrency
+	CryptoCurrency map[cryptoCurrency.Exchanger]CryptoCurrency
 }
 
 func NewCfg(file string) Config {

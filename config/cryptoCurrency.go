@@ -6,10 +6,10 @@ import (
 )
 
 type CryptoCurrency struct {
-	BaseUrl   string
-	APIKey    string
-	SecretKey string
-	Exchange  cryptoCurrency.Exchanger
+	APIHeaderKey string
+	APIKey       string
+	SecretKey    string
+	Exchange     cryptoCurrency.Exchanger
 }
 
 func (c CryptoCurrency) IsSupportedExchange() {
