@@ -6,6 +6,7 @@ import (
 	"github.com/04Akaps/trading_bot.git/common/http"
 	"github.com/04Akaps/trading_bot.git/types"
 	"github.com/04Akaps/trading_bot.git/types/cryptoCurrency"
+	"log"
 	"sync"
 )
 
@@ -21,11 +22,13 @@ func (j *Job) CurrentPrice(c context.Context, cancel context.CancelFunc) {
 		"BNBBTC": true,
 	}
 
-	var slackLoggerMap map[string]map[string]string
+	length := len(j.cfg.CryptoCurrency)
+
+	slackLoggerMap := make(map[string]map[string]string, length)
 
 	var work sync.WaitGroup
 
-	work.Add(len(j.cfg.CryptoCurrency))
+	work.Add(length)
 
 	for key, info := range j.cfg.CryptoCurrency {
 
@@ -37,21 +40,21 @@ func (j *Job) CurrentPrice(c context.Context, cancel context.CancelFunc) {
 		}
 
 		go func() {
-
 			defer work.Done()
 
 			switch k {
 			case cryptoCurrency.Binance:
 				var res []*types.CurrentPriceTicker
 
-				err := http.HttpClient.GetCurrentPriceTicker(_currentPriceTimeTicker, t.APIHeaderKey, t.APIKey, res)
+				err := http.HttpClient.GetCurrentPriceTicker(_currentPriceTimeTicker, t.APIHeaderKey, t.APIKey, &res)
 
 				if err != nil {
-					// TODO Log
+					log.Println("Failed to get current price", "err", err)
 					return
 				}
 
 				for _, o := range res {
+					fmt.Println(o.Symbol)
 					_, ok := symbols[o.Symbol]
 
 					if ok {

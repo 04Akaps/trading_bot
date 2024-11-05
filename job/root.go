@@ -5,7 +5,6 @@ import (
 	"github.com/04Akaps/trading_bot.git/client/cryptoCurrency"
 	"github.com/04Akaps/trading_bot.git/client/slack"
 	"github.com/04Akaps/trading_bot.git/config"
-	_cryptoCurrency "github.com/04Akaps/trading_bot.git/types/cryptoCurrency"
 	"github.com/robfig/cron"
 )
 
@@ -38,7 +37,9 @@ func (j *Job) Run(ctx context.Context) error {
 		j.slackClient.HealthCheck()
 	})
 
-	j.exchanger.GetTokenPrice(_cryptoCurrency.Binance, "BTC")
+	j.CurrentPrice(context.WithCancel(ctx))
+
+	//j.exchanger.GetTokenPrice(_cryptoCurrency.Binance, "BTC")
 
 	//j.c.AddFunc("0 0/2 * 1/1 * ? *", func() {
 	//	j.alertSignificantPriceChange(context.WithCancel(ctx))
