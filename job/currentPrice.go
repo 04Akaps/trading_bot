@@ -2,7 +2,6 @@ package job
 
 import (
 	"context"
-	"fmt"
 	"github.com/04Akaps/trading_bot.git/common/http"
 	"github.com/04Akaps/trading_bot.git/types"
 	"github.com/04Akaps/trading_bot.git/types/cryptoCurrency"
@@ -18,8 +17,9 @@ const (
 func (j *Job) CurrentPrice(c context.Context, cancel context.CancelFunc) {
 	// TODO -> 가져올 금액 symbol 배열로 DB 조회
 	symbols := map[string]bool{
-		"ETHBTC": true,
-		"BNBBTC": true,
+		"ETHBTC":  true,
+		"BNBBTC":  true,
+		"POLUSDT": true,
 	}
 
 	length := len(j.cfg.CryptoCurrency)
@@ -54,7 +54,6 @@ func (j *Job) CurrentPrice(c context.Context, cancel context.CancelFunc) {
 				}
 
 				for _, o := range res {
-					fmt.Println(o.Symbol)
 					_, ok := symbols[o.Symbol]
 
 					if ok {
@@ -70,8 +69,6 @@ func (j *Job) CurrentPrice(c context.Context, cancel context.CancelFunc) {
 
 	work.Wait()
 
-	for k, v := range slackLoggerMap {
-		fmt.Println(k, v)
-	}
+	j.slackClient.CurrentPriceMessage(slackLoggerMap)
 
 }

@@ -33,9 +33,9 @@ func NewJob(
 
 func (j *Job) Run(ctx context.Context) error {
 
-	j.c.AddFunc("0 * * * *", func() {
-		j.slackClient.HealthCheck()
-	})
+	//j.c.AddFunc("0 * * * *", func() {
+	//	j.slackClient.HealthCheck()
+	//})
 
 	j.CurrentPrice(context.WithCancel(ctx))
 

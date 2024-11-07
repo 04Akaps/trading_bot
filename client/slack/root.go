@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/04Akaps/trading_bot.git/config"
 	"github.com/slack-go/slack"
+	"log"
 )
 
 type SlackClient struct {
@@ -24,6 +25,48 @@ func NewSlackClient(cfg config.Slack) SlackClient {
 	return client
 }
 
+func (c SlackClient) CurrentPriceMessage(mapping map[string]map[string]string) {
+
+	attachment := slack.Attachment{}
+	fields := make([]slack.AttachmentField, len(mapping)+1)
+	index := 0
+
+	for key, info := range mapping {
+		att := slack.AttachmentField{
+			Title: key,
+		}
+
+		var message string
+
+		for s, p := range info {
+			message += fmt.Sprintf("%s -> %s", s, p)
+			message += "\n"
+		}
+
+		att.Value = message
+
+		fields[index] = att
+		index++
+	}
+
+	fields[index] = slack.AttachmentField{
+		Title: "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄\n█░░░░░░░░▀█▄▀▄▀██████░▀█▄▀▄▀██████░\n░░░░░░░░░░░▀█▄█▄███▀░░░ ▀██▄█▄███▀░\n",
+	}
+
+	attachment.Fields = fields
+
+	_, _, err := c.client.PostMessageContext(
+		context.Background(),
+		c.id,
+		slack.MsgOptionAsUser(true),
+		slack.MsgOptionAttachments(attachment),
+	)
+
+	if err != nil {
+		log.Println("Failed to send slack message", "currencPrice", "err", err)
+	}
+}
+
 func (c SlackClient) TestMessage(format string) {
 	_, _, err := c.client.PostMessageContext(
 		context.Background(),
@@ -34,7 +77,6 @@ func (c SlackClient) TestMessage(format string) {
 
 	if err != nil {
 		fmt.Println("errrr", err)
-		// TODO logger
 	}
 }
 
