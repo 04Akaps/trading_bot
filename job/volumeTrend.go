@@ -11,11 +11,10 @@ import (
 
 const (
 	// TODO changer 마다 url 변경
-	_currentPriceTimeTicker = "https://api1.binance.com/api/v3/ticker/price"
+	_currentVolumeTimeTicker = "https://api1.binance.com/api/v3/ticker/24hr"
 )
 
-func (j *Job) CurrentPrice(c context.Context, cancel context.CancelFunc) {
-	// TODO -> 가져올 금액 symbol 배열로 DB 조회
+func (j *Job) volumeTrend(c context.Context, cancel context.CancelFunc) {
 	symbols := map[string]bool{
 		//"ETHBTC":  true,
 		//"BNBBTC":  true,
@@ -46,7 +45,7 @@ func (j *Job) CurrentPrice(c context.Context, cancel context.CancelFunc) {
 			case cryptoCurrency.Binance:
 				var res []*types.CurrentPriceTicker
 
-				err := http.HttpClient.GetCurrentPriceTicker(_currentPriceTimeTicker, t.APIHeaderKey, t.APIKey, &res)
+				err := http.HttpClient.GetCurrentPriceTicker(_currentVolumeTimeTicker, t.APIHeaderKey, t.APIKey, &res)
 
 				if err != nil {
 					log.Println("Failed to get current price", "err", err)
@@ -68,7 +67,5 @@ func (j *Job) CurrentPrice(c context.Context, cancel context.CancelFunc) {
 	}
 
 	work.Wait()
-
-	j.slackClient.CurrentPriceMessage(slackLoggerMap)
 
 }

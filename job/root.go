@@ -37,7 +37,7 @@ func (j *Job) Run(ctx context.Context) error {
 	//	j.slackClient.HealthCheck()
 	//})
 
-	j.CurrentPrice(context.WithCancel(ctx))
+	//j.CurrentPrice(context.WithCancel(ctx))
 
 	//j.exchanger.GetTokenPrice(_cryptoCurrency.Binance, "BTC")
 
