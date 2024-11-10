@@ -9,12 +9,7 @@ import (
 	"sync"
 )
 
-const (
-	// TODO changer 마다 url 변경
-	_currentPriceTimeTicker = "https://api1.binance.com/api/v3/ticker/price"
-)
-
-func (j *Job) CurrentPrice(c context.Context, cancel context.CancelFunc) {
+func (j *Job) currentPrice(c context.Context, cancel context.CancelFunc) {
 	// TODO -> 가져올 금액 symbol 배열로 DB 조회
 	symbols := map[string]bool{
 		//"ETHBTC":  true,
@@ -46,7 +41,9 @@ func (j *Job) CurrentPrice(c context.Context, cancel context.CancelFunc) {
 			case cryptoCurrency.Binance:
 				var res []*types.CurrentPriceTicker
 
-				err := http.HttpClient.GetCurrentPriceTicker(_currentPriceTimeTicker, t.APIHeaderKey, t.APIKey, &res)
+				client := http.NewClient(t.APIHeaderKey, t.APIKey)
+
+				err := client.GET(_currentPriceTimeTicker, emptyString, emptyString, &res)
 
 				if err != nil {
 					log.Println("Failed to get current price", "err", err)
@@ -57,7 +54,7 @@ func (j *Job) CurrentPrice(c context.Context, cancel context.CancelFunc) {
 					_, ok := symbols[o.Symbol]
 
 					if ok {
-						slackLoggerMap[cryptoCurrency.Binance.ToString()][o.Symbol] = o.Price
+						slackLoggerMap[k.ToString()][o.Symbol] = o.Price
 					}
 				}
 

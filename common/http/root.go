@@ -16,26 +16,24 @@ type client struct {
 	*resty.Client
 }
 
-var HttpClient client
-
-func init() {
-
+func NewClient(headerKey, apiKey string) client {
 	restyC := resty.New().
 		SetJSONMarshaler(json.JsonHandler.Marshal).
 		SetJSONUnmarshaler(json.JsonHandler.Unmarshal).
-		SetTimeout(10 * time.Second)
+		SetTimeout(10*time.Second).
+		SetHeader(headerKey, apiKey)
 
-	HttpClient = client{restyC}
+	return client{restyC}
 }
 
 func (u client) POST(url string, req, resp interface{}) error {
-	body, err := HttpClient.JSONMarshal(req)
+	body, err := u.JSONMarshal(req)
 
 	if err != nil {
 		return err
 	}
 
-	_, err = HttpClient.R().
+	_, err = u.R().
 		SetBody(body).
 		SetResult(&resp).
 		Post(url)
@@ -63,7 +61,7 @@ func (u client) GET(url string, paramName, req []string, resp interface{}) error
 		url += v + "=" + req[i]
 	}
 
-	_, err := HttpClient.R().
+	_, err := u.R().
 		SetResult(&resp).
 		Get(url)
 
@@ -74,7 +72,12 @@ func (u client) GET(url string, paramName, req []string, resp interface{}) error
 	return nil
 }
 
-func (u client) GetCurrentPriceTicker(url, headerKey, apiKey string, buffer *[]*types.CurrentPriceTicker) error {
-	_, err := HttpClient.R().SetHeader(headerKey, apiKey).SetResult(buffer).Get(url)
+func (u client) GetCurrentPriceTicker(url string, buffer *[]*types.CurrentPriceTicker) error {
+	_, err := u.R().SetResult(buffer).Get(url)
+	return err
+}
+
+func (u client) GetTradingDay(url string, buffer *[]*types.VolumeTicker) error {
+	_, err := u.R().SetResult(buffer).Get(url)
 	return err
 }
