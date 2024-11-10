@@ -13,9 +13,10 @@ type Config struct {
 	MongoDB struct {
 		Uri string
 		DB  string
+	}
 
-		Block string
-		Tx    string
+	Info struct {
+		VolumeTraceInit bool
 	}
 }
 

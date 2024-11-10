@@ -16,5 +16,7 @@ const (
 )
 
 const (
-	_traceVolume = "https://api.binance.com/api/v3/klines"
+	// 10월 10일 이후의 데이터만 수집
+	_leastStartTime = "1728518400000" // 10월 10일 오전 9시
+	_traceVolume    = "https://api.binance.com/api/v3/klines"
 )

@@ -43,8 +43,9 @@ var Job = fx.Module(
 		cfg config.Config,
 		slack slack.SlackClient,
 		exchanger cryptoCurrency.CryptoCurrency,
+		mongoDB mongoDB.MongoDB,
 	) *job.Job {
-		return job.NewJob(slack, exchanger, cfg)
+		return job.NewJob(slack, exchanger, mongoDB, cfg)
 	}),
 )
 

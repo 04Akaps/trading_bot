@@ -10,19 +10,13 @@ import (
 )
 
 func (j *Job) currentPrice(c context.Context, cancel context.CancelFunc) {
-	// TODO -> 가져올 금액 symbol 배열로 DB 조회
-	symbols := map[string]bool{
-		//"ETHBTC":  true,
-		//"BNBBTC":  true,
-		"POLUSDT": true,
-	}
+	symbols := j.mongoDB.ScanTokenList()
 
 	length := len(j.cfg.CryptoCurrency)
 
 	slackLoggerMap := make(map[string]map[string]string, length)
 
 	var work sync.WaitGroup
-
 	work.Add(length)
 
 	for key, info := range j.cfg.CryptoCurrency {
@@ -30,8 +24,10 @@ func (j *Job) currentPrice(c context.Context, cancel context.CancelFunc) {
 		t := info
 		k := key
 
-		if _, ok := slackLoggerMap[k.ToString()]; !ok {
-			slackLoggerMap[k.ToString()] = make(map[string]string)
+		mapKey := k.ToString()
+
+		if _, ok := slackLoggerMap[mapKey]; !ok {
+			slackLoggerMap[mapKey] = make(map[string]string)
 		}
 
 		go func() {
@@ -54,7 +50,7 @@ func (j *Job) currentPrice(c context.Context, cancel context.CancelFunc) {
 					_, ok := symbols[o.Symbol]
 
 					if ok {
-						slackLoggerMap[k.ToString()][o.Symbol] = o.Price
+						slackLoggerMap[mapKey][o.Symbol] = o.Price
 					}
 				}
 

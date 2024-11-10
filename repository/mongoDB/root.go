@@ -32,3 +32,13 @@ func NewMongoDB(cfg config.Config) MongoDB {
 	}
 
 }
+
+func (m MongoDB) ScanTokenList() map[string]bool {
+	// TODO query
+
+	return map[string]bool{
+		//"ETHBTC": true,
+		//"BNBBTC":  true,
+		"POLUSDT": true,
+	}
+}

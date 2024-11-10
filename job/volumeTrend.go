@@ -12,11 +12,7 @@ import (
 )
 
 func (j *Job) volumeTrend(c context.Context, cancel context.CancelFunc) {
-	symbols := map[string]bool{
-		//"ETHBTC": true,
-		//"BNBBTC":  true,
-		"POLUSDT": true,
-	}
+	symbols := j.mongoDB.ScanTokenList()
 
 	length := len(j.cfg.CryptoCurrency)
 
@@ -30,8 +26,10 @@ func (j *Job) volumeTrend(c context.Context, cancel context.CancelFunc) {
 		t := info
 		k := key
 
-		if _, ok := slackLoggerMap[k.ToString()]; !ok {
-			slackLoggerMap[k.ToString()] = make(map[string]types.VolumeTrend)
+		mapKey := k.ToString()
+
+		if _, ok := slackLoggerMap[mapKey]; !ok {
+			slackLoggerMap[mapKey] = make(map[string]types.VolumeTrend)
 		}
 
 		go func() {
@@ -55,7 +53,7 @@ func (j *Job) volumeTrend(c context.Context, cancel context.CancelFunc) {
 					_, ok := symbols[o.Symbol]
 
 					if ok {
-						slackLoggerMap[k.ToString()][o.Symbol] = types.VolumeTrend{
+						slackLoggerMap[mapKey][o.Symbol] = types.VolumeTrend{
 							VolumeTicker: types.VolumeTicker{
 								PriceChange:        o.PriceChange,
 								PriceChangePercent: o.PriceChangePercent,
@@ -85,13 +83,13 @@ func (j *Job) volumeTrend(c context.Context, cancel context.CancelFunc) {
 				}
 
 				for _, o := range tradingRes {
-					ticker := slackLoggerMap[k.ToString()][o.Symbol]
+					ticker := slackLoggerMap[mapKey][o.Symbol]
 					ticker.TradingDayTicker = types.TradingDayTicker{
 						QuoteVolume: o.QuoteVolume,
 						Volume:      o.Volume,
 					}
 
-					slackLoggerMap[k.ToString()][o.Symbol] = ticker
+					slackLoggerMap[mapKey][o.Symbol] = ticker
 				}
 
 			}
