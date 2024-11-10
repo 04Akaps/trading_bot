@@ -7,7 +7,6 @@ import (
 	"github.com/04Akaps/trading_bot.git/types"
 	"github.com/slack-go/slack"
 	"log"
-	"strconv"
 	"strings"
 )
 
@@ -81,18 +80,7 @@ func (c SlackClient) VolumeMessage(mapping map[string]map[string]types.VolumeTre
 		var message strings.Builder
 
 		for s, p := range info {
-			changed, _ := strconv.ParseFloat(p.PriceChangePercent, 62)
-
-			if changed >= 5 {
-				message.WriteString(" 🚀🚀 ")
-			}
-
-			message.WriteString(fmt.Sprintf(" *%s* \n", s))
-
-			if changed >= 5 {
-				message.WriteString(" 🚀🚀 ")
-			}
-
+			att.Title = fmt.Sprintf("🚀🚀 *%s* 🚀🚀", s)
 			message.WriteString(fmt.Sprintf("%s -> %s \n", "priceChange", p.PriceChange))
 			message.WriteString(fmt.Sprintf("%s -> %s \n", "priceChangePercent", p.PriceChangePercent))
 			message.WriteString(fmt.Sprintf("%s -> %s \n", "highPrice", p.HighPrice))
@@ -103,7 +91,6 @@ func (c SlackClient) VolumeMessage(mapping map[string]map[string]types.VolumeTre
 		}
 
 		att.Value = message.String()
-		att.Title = "︻[]▄▅▆▇◤"
 
 		fields[index] = att
 		index++
@@ -122,4 +109,31 @@ func (c SlackClient) VolumeMessage(mapping map[string]map[string]types.VolumeTre
 		log.Println("Failed to send slack message", "volumeMessage", "err", err)
 	}
 
+}
+
+func (c SlackClient) VolumeTracker(symbol string, avg, current, diff float64) {
+	var message strings.Builder
+	message.WriteString(fmt.Sprintf("*%s* -> %.2f \n", "TotalAvgVolume", avg))
+	message.WriteString(fmt.Sprintf("*%s* -> %.2f \n", "CurrentVolume", current))
+	message.WriteString(fmt.Sprintf("*%s* -> %.2f \n", "VolumeDiff", diff))
+
+	att := slack.AttachmentField{
+		Title: fmt.Sprintf("🚀🚀 *%s* 🚀🚀", symbol),
+		Value: message.String(),
+	}
+
+	attachment := slack.Attachment{
+		Fields: []slack.AttachmentField{att},
+	}
+
+	_, _, err := c.client.PostMessageContext(
+		context.Background(),
+		c.id,
+		slack.MsgOptionAsUser(true),
+		slack.MsgOptionAttachments(attachment),
+	)
+
+	if err != nil {
+		log.Println("Failed to send slack message", "VolumeTracker", "err", err)
+	}
 }

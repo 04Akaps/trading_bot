@@ -24,3 +24,9 @@ type VolumeTrend struct {
 	VolumeTicker
 	TradingDayTicker
 }
+
+type VolumeDocument struct {
+	Time   int64  `json:"time" bson:"time"`
+	Symbol string `json:"symbol" bson:"symbol"`
+	Volume string `json:"volume" bson:"volume"`
+}

@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"github.com/04Akaps/trading_bot.git/common/http"
 	"github.com/04Akaps/trading_bot.git/types/cryptoCurrency"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"sync"
 	"time"
 )
 
 func (j *Job) volumeTrace(c context.Context, cancel context.CancelFunc) {
-	// 5 번쨰가 volume
 	symbols := j.mongoDB.ScanTokenList()
 	length := len(j.cfg.CryptoCurrency)
 
@@ -20,7 +21,9 @@ func (j *Job) volumeTrace(c context.Context, cancel context.CancelFunc) {
 	var work sync.WaitGroup
 	work.Add(length)
 
-	defer j.volumeTraceInit.Store(false)
+	defer func() {
+		j.volumeTraceInit.Store(false)
+	}()
 
 	for key, info := range j.cfg.CryptoCurrency {
 		t := info
@@ -37,15 +40,6 @@ func (j *Job) volumeTrace(c context.Context, cancel context.CancelFunc) {
 
 			switch k {
 			case cryptoCurrency.Binance:
-				var startTime string
-
-				if j.volumeTraceInit.Load() {
-					startTime = _leastStartTime
-				} else {
-					now := time.Now().UTC() // 현재 UTC 시간
-					startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, time.UTC)
-					startTime = fmt.Sprintf("%d", startOfDay.UnixMilli()) // 밀리초 단위로 변환
-				}
 
 				client := http.NewClient(t.APIHeaderKey, t.APIKey)
 
@@ -53,34 +47,47 @@ func (j *Job) volumeTrace(c context.Context, cancel context.CancelFunc) {
 
 					var res []interface{}
 
-					err := client.GET(
-						_traceVolume,
-						[]string{"symbol", "startTime", "interval"},
-						[]string{s, startTime, "1d"},
-						&res,
-					)
+					var paramName []string
+					var req []string
+
+					if j.volumeTraceInit.Load() {
+						paramName = []string{"symbol", "interval"}
+						req = []string{s, "1d"}
+					} else {
+						paramName = []string{"symbol", "startTime", "interval"}
+						now := time.Now().UTC()
+						startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, time.UTC)
+						startTime := fmt.Sprintf("%d", startOfDay.UnixMilli())
+						req = []string{s, startTime, "1d"}
+					}
+
+					err := client.GET(_traceVolume, paramName, req, &res)
 
 					if err != nil {
 						log.Println("Failed to get volume trace", "symbol", s, "err", err)
 						return
 					}
 
-					fmt.Println(res)
+					models := make([]mongo.WriteModel, len(res))
+					index := 0
 
-					//[
-					//	1731196800000,
-					//	"0.38550000",
-					//	"0.41090000",
-					//	"0.38110000",
-					//	"0.39790000",
-					//	"60232608.20000000",
-					//	1731283199999,
-					//	"23813569.16730000",
-					//	78243,
-					//	"30583249.40000000",
-					//	"12097183.77477000",
-					//	"0"
-					//]
+					for _, datas := range res {
+						data := datas.([]interface{})
+
+						time := data[0]
+						volume := data[5]
+
+						models[index] = mongo.NewUpdateOneModel().
+							SetFilter(bson.M{"time": time, "symbol": s}).
+							SetUpdate(bson.M{"$set": bson.M{"time": time, "symbol": s, "volume": volume}}).
+							SetUpsert(true)
+						index++
+					}
+
+					if len(models) > 0 {
+						j.mongoDB.UpdateBulk(models)
+						j.volumeUpdateChannel <- s
+					}
 				}
 
 			}
@@ -90,7 +97,4 @@ func (j *Job) volumeTrace(c context.Context, cancel context.CancelFunc) {
 	}
 
 	work.Wait()
-	//
-	//j.slackClient.CurrentPriceMessage(slackLoggerMap)
-
 }
