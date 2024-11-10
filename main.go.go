@@ -12,6 +12,7 @@ func main() {
 		dependency.Slack,
 		dependency.CryptoClient,
 		dependency.Job,
+		dependency.MongoDB,
 		fx.Provide(app.NewTracing),
 		fx.Invoke(func(app.App) {}),
 	).Run()

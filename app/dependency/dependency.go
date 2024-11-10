@@ -6,6 +6,7 @@ import (
 	"github.com/04Akaps/trading_bot.git/client/slack"
 	"github.com/04Akaps/trading_bot.git/config"
 	"github.com/04Akaps/trading_bot.git/job"
+	"github.com/04Akaps/trading_bot.git/repository/mongoDB"
 	"go.uber.org/fx"
 )
 
@@ -44,5 +45,12 @@ var Job = fx.Module(
 		exchanger cryptoCurrency.CryptoCurrency,
 	) *job.Job {
 		return job.NewJob(slack, exchanger, cfg)
+	}),
+)
+
+var MongoDB = fx.Module(
+	"mongoDB",
+	fx.Provide(func(cfg config.Config) mongoDB.MongoDB {
+		return mongoDB.NewMongoDB(cfg)
 	}),
 )

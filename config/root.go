@@ -9,6 +9,14 @@ import (
 type Config struct {
 	Slack          Slack
 	CryptoCurrency map[cryptoCurrency.Exchanger]CryptoCurrency
+
+	MongoDB struct {
+		Uri string
+		DB  string
+
+		Block string
+		Tx    string
+	}
 }
 
 func NewCfg(file string) Config {
