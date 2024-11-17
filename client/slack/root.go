@@ -186,7 +186,7 @@ func (c *SlackClient) Top5VolumeDiffTrend(result []types.Top5VolumeDiff) {
 		message.WriteString(fmt.Sprintf("> *Diff*             : `%.2f`\n", info.Diff))
 
 		att := slack.AttachmentField{
-			Title: fmt.Sprintf("🚀🚀 *%s* 🚀🚀", info.Symbol),
+			Title: fmt.Sprintf("*%s*", info.Symbol),
 			Value: message.String(),
 		}
 
@@ -194,6 +194,7 @@ func (c *SlackClient) Top5VolumeDiffTrend(result []types.Top5VolumeDiff) {
 	}
 
 	attachment := slack.Attachment{
+		Title:  "----------- Current Volume Diff Top5 ----------- ",
 		Fields: fields,
 	}
 
