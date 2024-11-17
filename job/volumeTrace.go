@@ -44,8 +44,6 @@ func (j *Job) volumeTrace() {
 
 				for s, _ := range symbols {
 
-					var res []interface{}
-
 					var paramName []string
 					var req []string
 
@@ -59,6 +57,8 @@ func (j *Job) volumeTrace() {
 						startTime := fmt.Sprintf("%d", startOfDay.UnixMilli())
 						req = []string{s, startTime, "1d"}
 					}
+
+					var res []interface{}
 
 					err := client.GET(_traceVolume, paramName, req, &res)
 

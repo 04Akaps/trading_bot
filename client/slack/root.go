@@ -105,12 +105,12 @@ func (c *SlackClient) VolumeMessage(mapping map[string]map[string]types.VolumeTr
 
 			message := fmt.Sprintf(
 				"> %s \n"+
-					"> *Change*        `%s`       \n"+
+					"> *Change*   `%s`       \n"+
 					"> *CPercent* `%s` | diff `%s`      \n"+
-					"> *HPrice*           `%s`       \n"+
-					"> *LPrice*            `%s`       \n"+
-					"> *QVolume* `%s` | diff `%s`     \n"+
-					"> *Volume*  `%s` | diff `%s` ",
+					"> *HPrice*   `%s`       \n"+
+					"> *LPrice*   `%s`       \n"+
+					"> *QVolume*  `%s` | diff `%s`     \n"+
+					"> *Volume*   `%s` | diff `%s` ",
 				s,
 				formatFloat(p.PriceChange),
 				formatFloat(p.PriceChangePercent),
@@ -171,6 +171,64 @@ func (c *SlackClient) VolumeTracker(symbol string, avg, current, diff float64) {
 
 	if err != nil {
 		log.Println("Failed to send slack message", "VolumeTracker", "err", err)
+	}
+}
+
+func (c *SlackClient) Top5VolumeDiffTrend(result []types.Top5VolumeDiff) {
+
+	fields := make([]slack.AttachmentField, len(result))
+
+	for i, info := range result {
+		var message strings.Builder
+
+		message.WriteString(fmt.Sprintf("> *Today Volume*     : `%.2f`\n", info.CurrentVolume))
+		message.WriteString(fmt.Sprintf("> *Before Volume*    : `%.2f`\n", info.BeforeVolume))
+		message.WriteString(fmt.Sprintf("> *Diff*             : `%.2f`\n", info.Diff))
+
+		att := slack.AttachmentField{
+			Title: fmt.Sprintf("🚀🚀 *%s* 🚀🚀", info.Symbol),
+			Value: message.String(),
+		}
+
+		fields[i] = att
+	}
+
+	attachment := slack.Attachment{
+		Fields: fields,
+	}
+
+	_, _, err := c.client.PostMessageContext(
+		context.Background(),
+		c.id,
+		slack.MsgOptionAsUser(true),
+		slack.MsgOptionAttachments(attachment),
+	)
+
+	if err != nil {
+		log.Println("Failed to send slack message", "Top5VolumeDiffTrend", "err", err)
+	}
+}
+
+func (c *SlackClient) Top5VolumeDiffStarter() {
+	var message strings.Builder
+	message.WriteString("> 어제, 오늘을 비교하여 거래량 차이가 큰 Top5를 집계 시작합니다. \n")
+	message.WriteString("데이터가 많기 떄문에 기다려주세요.")
+
+	att := slack.AttachmentField{Title: message.String()}
+
+	attachment := slack.Attachment{
+		Fields: []slack.AttachmentField{att},
+	}
+
+	_, _, err := c.client.PostMessageContext(
+		context.Background(),
+		c.id,
+		slack.MsgOptionAsUser(true),
+		slack.MsgOptionAttachments(attachment),
+	)
+
+	if err != nil {
+		log.Println("Failed to send slack message", "Top5VolumeDiffStarter", "err", err)
 	}
 }
 

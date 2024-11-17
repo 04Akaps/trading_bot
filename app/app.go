@@ -16,8 +16,7 @@ func NewTracing(
 
 	lc.Append(fx.Hook{
 		OnStart: func(c context.Context) error {
-			job.Run()
-			return nil
+			return job.Run()
 		},
 	})
 	return App{}

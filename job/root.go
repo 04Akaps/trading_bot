@@ -1,7 +1,6 @@
 package job
 
 import (
-	"context"
 	"github.com/04Akaps/trading_bot.git/client/cryptoCurrency"
 	"github.com/04Akaps/trading_bot.git/client/slack"
 	"github.com/04Akaps/trading_bot.git/config"
@@ -20,6 +19,8 @@ type Job struct {
 
 	volumeTraceInit     atomic.Bool
 	volumeUpdateChannel chan string
+
+	symbols map[string]bool
 }
 
 func NewJob(
@@ -35,9 +36,11 @@ func NewJob(
 		exchanger:           exchanger,
 		mongoDB:             mongoDB,
 		volumeUpdateChannel: make(chan string),
+		symbols:             make(map[string]bool),
 	}
 
 	j.volumeTraceInit.Store(cfg.Info.VolumeTraceInit)
+	j.symbols = j.binanceAllSymbols()
 
 	go func() {
 		go j.volumeTraceDiffChecker()
@@ -46,29 +49,49 @@ func NewJob(
 	return j
 }
 
-func (j *Job) Run() {
+func (j *Job) Run() error {
 
 	j.c.Start()
 
-	j.tracker()
+	if err := j.util(); err != nil {
+		return err
+	} else if err = j.trend(); err != nil {
+		return err
+	} else if err = j.tracker(); err != nil {
+		return err
+	}
 
 	go j.c.Run()
 
+	return nil
 }
 
-func (j *Job) tracker() {
+func (j *Job) tracker() error {
 
 	if j.volumeTraceInit.Load() {
 		j.volumeTrace()
 	}
 
-	j.c.AddFunc("0 */15 * * * *", func() {
+	err := j.c.AddFunc("0 */5 * * * *", func() {
 		j.volumeTrace()
 		j.volumeTrend()
 	})
 
+	return err
 }
 
-func (j *Job) exchangerTrend(ctx context.Context) {
+func (j *Job) trend() error {
+	err := j.c.AddFunc("0 */15 * * * *", func() {
+		j.exchangerTrend()
+	})
 
+	return err
+}
+
+func (j *Job) util() error {
+	err := j.c.AddFunc("0 * * * * *", func() {
+		j.symbols = j.binanceAllSymbols()
+	})
+
+	return err
 }
