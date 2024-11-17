@@ -18,6 +18,11 @@ type MongoDB struct {
 	db     *mongo.Database
 
 	volume *mongo.Collection
+	scan   *mongo.Collection
+}
+
+var defaultScanRes = map[string]bool{
+	"POLUSDT": true,
 }
 
 func NewMongoDB(cfg config.Config) MongoDB {
@@ -47,13 +52,31 @@ func NewMongoDB(cfg config.Config) MongoDB {
 }
 
 func (m MongoDB) ScanTokenList() map[string]bool {
-	// TODO query
 
-	return map[string]bool{
-		//"ETHBTC": true,
-		//"BNBBTC":  true,
-		"POLUSDT": true,
+	ctx := context.Background()
+
+	cursor, err := m.scan.Find(ctx, bson.M{})
+
+	if err != nil {
+		return defaultScanRes
 	}
+
+	length := cursor.RemainingBatchLength()
+	res := make(map[string]bool, length)
+
+	for cursor.Next(ctx) {
+		var dec struct {
+			Symbol string `bson:"symbol"`
+		}
+
+		if err = cursor.Decode(&dec); err != nil {
+			return defaultScanRes
+		}
+
+		res[dec.Symbol] = true
+	}
+
+	return res
 }
 
 func (m MongoDB) UpdateBulk(models []mongo.WriteModel) {

@@ -11,7 +11,7 @@ import (
 )
 
 func (j *Job) volumeTrend() {
-	symbols := j.mongoDB.ScanTokenList()
+	symbols := j.scanSymbols
 
 	length := len(j.cfg.CryptoCurrency)
 

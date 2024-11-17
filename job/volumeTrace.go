@@ -12,7 +12,7 @@ import (
 )
 
 func (j *Job) volumeTrace() {
-	symbols := j.mongoDB.ScanTokenList()
+	symbols := j.scanSymbols
 	length := len(j.cfg.CryptoCurrency)
 
 	slackLoggerMap := make(map[string]map[string]string, length)

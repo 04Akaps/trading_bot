@@ -20,7 +20,8 @@ type Job struct {
 	volumeTraceInit     atomic.Bool
 	volumeUpdateChannel chan string
 
-	symbols map[string]bool
+	symbols     map[string]bool
+	scanSymbols map[string]bool
 }
 
 func NewJob(
@@ -37,10 +38,12 @@ func NewJob(
 		mongoDB:             mongoDB,
 		volumeUpdateChannel: make(chan string),
 		symbols:             make(map[string]bool),
+		scanSymbols:         make(map[string]bool),
 	}
 
 	j.volumeTraceInit.Store(cfg.Info.VolumeTraceInit)
 	j.symbols = j.binanceAllSymbols()
+	j.scanSymbols = j.getScanSymbols()
 
 	go func() {
 		go j.volumeTraceDiffChecker()
@@ -91,6 +94,7 @@ func (j *Job) trend() error {
 func (j *Job) util() error {
 	err := j.c.AddFunc("0 * * * * *", func() {
 		j.symbols = j.binanceAllSymbols()
+		j.scanSymbols = j.getScanSymbols()
 	})
 
 	return err

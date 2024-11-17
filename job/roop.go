@@ -39,5 +39,8 @@ func (j *Job) binanceAllSymbols() map[string]bool {
 	}
 
 	return symbols
+}
 
+func (j *Job) getScanSymbols() map[string]bool {
+	return j.mongoDB.ScanTokenList()
 }
