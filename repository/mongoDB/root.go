@@ -2,7 +2,6 @@ package mongoDB
 
 import (
 	"context"
-	"fmt"
 	"github.com/04Akaps/trading_bot.git/config"
 	"github.com/04Akaps/trading_bot.git/types"
 	"github.com/shopspring/decimal"
@@ -79,8 +78,6 @@ func (m MongoDB) GetVolumeInfo(symbol string) (avgVolume, currentVolume, diff fl
 	}
 
 	total := cursor.RemainingBatchLength()
-
-	fmt.Println(total)
 
 	var totalVolume decimal.Decimal
 

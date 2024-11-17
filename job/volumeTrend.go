@@ -1,7 +1,6 @@
 package job
 
 import (
-	"context"
 	"fmt"
 	"github.com/04Akaps/trading_bot.git/common/http"
 	"github.com/04Akaps/trading_bot.git/types"
@@ -11,7 +10,7 @@ import (
 	"sync"
 )
 
-func (j *Job) volumeTrend(c context.Context, cancel context.CancelFunc) {
+func (j *Job) volumeTrend() {
 	symbols := j.mongoDB.ScanTokenList()
 
 	length := len(j.cfg.CryptoCurrency)

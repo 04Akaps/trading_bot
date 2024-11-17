@@ -7,24 +7,26 @@ import (
 	"github.com/04Akaps/trading_bot.git/types"
 	"github.com/slack-go/slack"
 	"log"
+	"strconv"
 	"strings"
 )
 
 type SlackClient struct {
 	client *slack.Client
 	id     string
+
+	volumeTracker map[string]types.VolumeTrend
 }
 
-func NewSlackClient(cfg config.Slack) SlackClient {
-	var client SlackClient
-
-	client.client = slack.New(cfg.Token)
-	client.id = cfg.ChannelID
-
-	return client
+func NewSlackClient(cfg config.Slack) *SlackClient {
+	return &SlackClient{
+		client:        slack.New(cfg.Token),
+		id:            cfg.ChannelID,
+		volumeTracker: make(map[string]types.VolumeTrend),
+	}
 }
 
-func (c SlackClient) CurrentPriceMessage(mapping map[string]map[string]string) {
+func (c *SlackClient) CurrentPriceMessage(mapping map[string]map[string]string) {
 
 	attachment := slack.Attachment{}
 	fields := make([]slack.AttachmentField, len(mapping)+1)
@@ -66,43 +68,76 @@ func (c SlackClient) CurrentPriceMessage(mapping map[string]map[string]string) {
 	}
 }
 
-func (c SlackClient) VolumeMessage(mapping map[string]map[string]types.VolumeTrend) {
+func (c *SlackClient) VolumeMessage(mapping map[string]map[string]types.VolumeTrend) {
+	var blocks []slack.Block
 
-	attachment := slack.Attachment{}
-	fields := make([]slack.AttachmentField, len(mapping)+1)
-	index := 0
-
-	for key, info := range mapping {
-		att := slack.AttachmentField{
-			Title: key,
-		}
-
-		var message strings.Builder
+	for _, info := range mapping {
 
 		for s, p := range info {
-			att.Title = fmt.Sprintf("🚀🚀 *%s* 🚀🚀", s)
-			message.WriteString(fmt.Sprintf("%s -> %s \n", "priceChange", p.PriceChange))
-			message.WriteString(fmt.Sprintf("%s -> %s \n", "priceChangePercent", p.PriceChangePercent))
-			message.WriteString(fmt.Sprintf("%s -> %s \n", "highPrice", p.HighPrice))
-			message.WriteString(fmt.Sprintf("%s -> %s \n", "lowPrice", p.LowPrice))
-			message.WriteString(fmt.Sprintf("%s -> %s \n", "openPrice", p.OpenPrice))
-			message.WriteString(fmt.Sprintf("%s -> %s \n", "quoteVolume", p.QuoteVolume))
-			message.WriteString(fmt.Sprintf("%s -> %s \n", "volume", p.Volume))
+			beforeVolumeDiff := "0"
+			beforeQVolumeDiff := "0"
+			beforePercentDiff := "0"
+
+			v, ok := c.volumeTracker[s]
+
+			if ok {
+				if beforeValue, err := strconv.ParseFloat(v.Volume, 64); err == nil {
+					currentValue, _ := strconv.ParseFloat(p.Volume, 64)
+					beforeVolumeDiff = fmt.Sprintf("%.2f", currentValue-beforeValue)
+				}
+
+				if beforeQVolume, err := strconv.ParseFloat(v.QuoteVolume, 64); err == nil {
+					currentQVolume, _ := strconv.ParseFloat(p.QuoteVolume, 64)
+					beforeQVolumeDiff = fmt.Sprintf("%.2f", currentQVolume-beforeQVolume)
+				}
+
+				if beforePercent, err := strconv.ParseFloat(v.PriceChangePercent, 64); err == nil {
+					currentPercent, _ := strconv.ParseFloat(p.PriceChangePercent, 64)
+					beforePercentDiff = fmt.Sprintf("%.2f", currentPercent-beforePercent)
+				}
+			}
+
+			v.Volume = p.Volume
+			v.QuoteVolume = p.QuoteVolume
+			v.PriceChangePercent = p.PriceChangePercent
+
+			c.volumeTracker[s] = v
+
+			message := fmt.Sprintf(
+				"> %s \n"+
+					"> *Change*        `%s`       \n"+
+					"> *CPercent* `%s` | diff `%s`      \n"+
+					"> *HPrice*           `%s`       \n"+
+					"> *LPrice*            `%s`       \n"+
+					"> *QVolume* `%s` | diff `%s`     \n"+
+					"> *Volume*  `%s` | diff `%s` ",
+				s,
+				formatFloat(p.PriceChange),
+				formatFloat(p.PriceChangePercent),
+				formatFloat(beforePercentDiff),
+				formatFloat(p.HighPrice),
+				formatFloat(p.LowPrice),
+				formatFloat(p.QuoteVolume),
+				formatFloat(beforeQVolumeDiff),
+				formatFloat(p.Volume),
+				formatFloat(beforeVolumeDiff),
+			)
+
+			blocks = append(blocks, slack.NewSectionBlock(
+				slack.NewTextBlockObject("mrkdwn", message, false, false),
+				nil, nil,
+			))
+
+			blocks = append(blocks, slack.NewDividerBlock())
 		}
 
-		att.Value = message.String()
-
-		fields[index] = att
-		index++
 	}
-
-	attachment.Fields = fields
 
 	_, _, err := c.client.PostMessageContext(
 		context.Background(),
 		c.id,
 		slack.MsgOptionAsUser(true),
-		slack.MsgOptionAttachments(attachment),
+		slack.MsgOptionBlocks(blocks...), // 블록들을 슬랙에 전송
 	)
 
 	if err != nil {
@@ -111,11 +146,12 @@ func (c SlackClient) VolumeMessage(mapping map[string]map[string]types.VolumeTre
 
 }
 
-func (c SlackClient) VolumeTracker(symbol string, avg, current, diff float64) {
+func (c *SlackClient) VolumeTracker(symbol string, avg, current, diff float64) {
 	var message strings.Builder
-	message.WriteString(fmt.Sprintf("*%s* -> %.2f \n", "TotalAvgVolume", avg))
-	message.WriteString(fmt.Sprintf("*%s* -> %.2f \n", "CurrentVolume", current))
-	message.WriteString(fmt.Sprintf("*%s* -> %.2f \n", "VolumeDiff", diff))
+
+	message.WriteString(fmt.Sprintf("> *Total Avg Volume*  : `%.2f`\n", avg))
+	message.WriteString(fmt.Sprintf("> *Current Volume*    : `%.2f`\n", current))
+	message.WriteString(fmt.Sprintf("> *Volume Diff*       : `%.2f`\n", diff))
 
 	att := slack.AttachmentField{
 		Title: fmt.Sprintf("🚀🚀 *%s* 🚀🚀", symbol),
@@ -136,4 +172,13 @@ func (c SlackClient) VolumeTracker(symbol string, avg, current, diff float64) {
 	if err != nil {
 		log.Println("Failed to send slack message", "VolumeTracker", "err", err)
 	}
+}
+
+func formatFloat(value string) string {
+	floatValue, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return value
+	}
+
+	return fmt.Sprintf("%.2f", floatValue)
 }

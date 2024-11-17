@@ -4,7 +4,6 @@ func (j *Job) volumeTraceDiffChecker() {
 	for {
 		select {
 		case symbol := <-j.volumeUpdateChannel:
-
 			go func() {
 				total, currentVolume, diff := j.mongoDB.GetVolumeInfo(symbol)
 

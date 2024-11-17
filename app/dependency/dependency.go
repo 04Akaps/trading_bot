@@ -25,7 +25,7 @@ var Cfg = fx.Module(
 
 var Slack = fx.Module(
 	"slack",
-	fx.Provide(func(cfg config.Config) slack.SlackClient {
+	fx.Provide(func(cfg config.Config) *slack.SlackClient {
 		return slack.NewSlackClient(cfg.Slack)
 	}),
 )
@@ -41,7 +41,7 @@ var Job = fx.Module(
 	"job",
 	fx.Provide(func(
 		cfg config.Config,
-		slack slack.SlackClient,
+		slack *slack.SlackClient,
 		exchanger cryptoCurrency.CryptoCurrency,
 		mongoDB mongoDB.MongoDB,
 	) *job.Job {

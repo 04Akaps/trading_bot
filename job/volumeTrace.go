@@ -1,7 +1,6 @@
 package job
 
 import (
-	"context"
 	"fmt"
 	"github.com/04Akaps/trading_bot.git/common/http"
 	"github.com/04Akaps/trading_bot.git/types/cryptoCurrency"
@@ -12,7 +11,7 @@ import (
 	"time"
 )
 
-func (j *Job) volumeTrace(c context.Context, cancel context.CancelFunc) {
+func (j *Job) volumeTrace() {
 	symbols := j.mongoDB.ScanTokenList()
 	length := len(j.cfg.CryptoCurrency)
 
@@ -86,8 +85,9 @@ func (j *Job) volumeTrace(c context.Context, cancel context.CancelFunc) {
 
 					if len(models) > 0 {
 						j.mongoDB.UpdateBulk(models)
-						j.volumeUpdateChannel <- s
 					}
+
+					j.volumeUpdateChannel <- s
 				}
 
 			}

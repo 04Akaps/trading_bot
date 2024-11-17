@@ -15,7 +15,7 @@ type Job struct {
 	cfg config.Config
 
 	mongoDB     mongoDB.MongoDB
-	slackClient slack.SlackClient
+	slackClient *slack.SlackClient
 	exchanger   cryptoCurrency.CryptoCurrency
 
 	volumeTraceInit     atomic.Bool
@@ -23,7 +23,7 @@ type Job struct {
 }
 
 func NewJob(
-	slackClient slack.SlackClient,
+	slackClient *slack.SlackClient,
 	exchanger cryptoCurrency.CryptoCurrency,
 	mongoDB mongoDB.MongoDB,
 	cfg config.Config,
@@ -46,22 +46,29 @@ func NewJob(
 	return j
 }
 
-func (j *Job) Run(ctx context.Context) error {
+func (j *Job) Run() {
 
-	if j.volumeTraceInit.Load() {
-		// 만약 초기에 init 설정이라면, true로 설정 후 false로 변경
-		j.volumeTrace(context.WithCancel(ctx))
-	}
+	j.c.Start()
 
-	j.c.AddFunc("*/5 * * * *", func() {
-		j.volumeTrace(context.WithCancel(ctx))
-	})
-
-	j.c.AddFunc("*/15 * * * *", func() {
-		j.volumeTrend(context.WithCancel(ctx))
-	})
+	j.tracker()
 
 	go j.c.Run()
 
-	return nil
+}
+
+func (j *Job) tracker() {
+
+	if j.volumeTraceInit.Load() {
+		j.volumeTrace()
+	}
+
+	j.c.AddFunc("0 */15 * * * *", func() {
+		j.volumeTrace()
+		j.volumeTrend()
+	})
+
+}
+
+func (j *Job) exchangerTrend(ctx context.Context) {
+
 }
